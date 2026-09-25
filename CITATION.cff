@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+
+message: >-
+  If you use, adapt, or refer to these slides, please cite them using
+  the metadata in this file.
+
+title: >-
+  The Logarithmic Derivative in Stochastic Dynamics:
+  A Malliavin-Calculus Perspective
+
+authors:
+  - family-names: Mirafzali
+    given-names: Ehsan
+
+license: CC-BY-4.0
