@@ -1,0 +1,710 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Manim Slides</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@6.0.1/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@6.0.1/dist/theme/black.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <!-- <link rel="stylesheet" href="lib/css/zenburn.css"> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@6.0.1/dist/plugin/highlight/zenburn.css">
+    <!-- <link rel="stylesheet" href="index.css"> -->
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/7a8b4802f0a0889d30e77bcaf7d6d03ce4834089c028115116fae47e91a512ed.mp4"
+          data-background-video-muted
+          >
+            <aside class="notes" data-markdown>The talk is about the score function --- gradient of log density --- as it appears across SDEs, then state-dependent SDEs, then SPDEs. Closed-form pathwise expressions in all three regimes, no Fokker--Planck. The unifying tool: Malliavin calculus.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/cb5fe3457a6b3959a8fefadf122ccc3ae86d90e26e001beb121bcef03fa514fb.mp4"
+          >
+            <aside class="notes" data-markdown>Seven parts. Part I motivates the score; II builds the Malliavin machinery up through Bismut's formula; III, IV, V are the three papers; VI is numerics; VII is open directions.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/7c5ab9bd2322f95ac816c0d978b4875f34e7bda2117d8074cee25bfb97f4af47.mp4"
+          >
+            <aside class="notes" data-markdown>An SDE is an ODE with a noise term --- the Brownian differential dB. Left: deterministic ODE, single trajectory. Right: SDE, an ensemble because each Brownian realisation gives a different path.
+
+Key point: the object of interest is the distribution over paths, not any single path. The score is the gradient of the log of that distribution.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/bed6ae647ae1cdf22efa51f640c4fe5b5dd61f5053f6e11c70ac277af4136ca1.mp4"
+          >
+            <aside class="notes" data-markdown>An SPDE is a PDE with noise. State is a FUNCTION over space; dynamics push that function around while adding random fluctuations everywhere.
+
+Same structure as the SDE case: ensemble of realisations, distribution over a function space, score is the logarithmic derivative of that distribution. Now infinite-dimensional --- which forces the Cameron--Martin geometry in Part V.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/ed7861baeee20c475d32715f58e50cb38369b18d86d53a97bc57e4a97fefb861.mp4"
+          >
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/e1b70d6f768b7d25ae03444d77fe8b0665f9eab7df166710302d099f4261290d.mp4"
+          >
+            <aside class="notes" data-markdown>The score is the gradient of the log density. Equivalently nabla p equals p times s --- the logarithmic derivative. That logarithmic form is what survives to infinite dimensions, where pointwise densities don't exist but logarithmic derivatives of measures still do. Part V will use this.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/6ffddea50fa38b32a673401cddfdc523e83cbedf355bf390c1810124d4f92809.mp4"
+          >
+            <aside class="notes" data-markdown>Before going further --- here is where we're going.
+
+Bismut's identity from Malliavin calculus gives the score pathwise: LHS is exactly the gradient of log p we just defined; RHS is a conditional expectation of delta(u_k), where delta is the Skorokhod integral and u_k is the covering field. Both are abstract Malliavin objects right now. The whole talk is about making this formula computable across three regimes.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/127331437554ce971e603d2a13e35ec1161e53c3cfe9fbaa4b9ae10c6571f4b7.mp4"
+          >
+            <aside class="notes" data-markdown>The score is one of the most pervasive objects in modern probability. Same gradient of log density, six different fields:
+
+Generative modelling: drift of the reverse-time SDE. Fisher's score function: derivative of log-likelihood, foundation of classical statistics. Langevin sampling: the drift that makes pi the stationary law of MCMC. Stein's method: uniquely characterises p via integration-by-parts --- the basis of score matching and modern goodness-of-fit testing. Stochastic thermodynamics: entropy production rate literally IS the L2 distance of the score from the equilibrium score. Otto calculus: the W_2 gradient of relative entropy --- Fokker-Planck as a gradient flow in Wasserstein space.
+
+In every case the question is the same: how do you compute it for the dynamics you have? That's the question this thesis answers.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/c4e0f3848ec0218921162cb7c7fc224f5c7b2bfe9823ea5d1ab8ae2b23afbf39.mp4"
+          >
+            <aside class="notes" data-markdown>Run any forward SDE; the reverse-time SDE has the same noise, almost the same drift, plus one extra term --- the score. All unknown information about the data distribution is concentrated in this one object. Learn the score, get a sampler. This is the engine of diffusion models.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/98331aa0ccb083e0e1ecd28d18f43076ee8d532e838bf2a90f5f479edf951dbe.mp4"
+          >
+            <aside class="notes" data-markdown>Cloud starts as a trefoil knot --- 200 particles on a structured 1D submanifold. The forward SDE blurs it into Gaussian noise. The reverse SDE, driven by the score, recovers the manifold. Without the score term, the reverse would be more Brownian motion --- the manifold is the score's signature.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/a2ceec5060949c7264cc6562b0d82d1d38233909ebbbb60f647987fd3f1593d1.mp4"
+          >
+            <aside class="notes" data-markdown>The classical route: solve Fokker--Planck for p, then take nabla log. Catch: closed-form p exists only in narrow regimes --- Gaussian transitions (linear b, state-indep sigma, used by DDPM/EDM), OU, heat, a few special drifts. Nonlinear or state-dependent sigma: no closed form, and numerical PDE solvers fail in high dim. This is the gap the thesis fills.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/a4d964322ede81b27f506ddb88073cd138076f664b805405e637ca714b935eaa.mp4"
+          >
+            <aside class="notes" data-markdown>Five obstructions in the nonlinear regime: no closed-form p, curse of dimensionality on the PDE, no Gaussian transitions, no Tweedie identity, and a training-time circularity (need the score to train the score).
+
+The gap: a pathwise representation that uses only the SDE itself. Malliavin calculus is built exactly for this.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/47a6bc2cbe8c5e9569c94464e6d2ba1597daa2b75ef2d16bd621d03852f17bf6.mp4"
+          >
+            <aside class="notes" data-markdown>The technical question, stated precisely. Compute the score of an Ito SDE using only path-space objects --- no Fokker--Planck, no Gaussian assumption, no transition density. That's what Malliavin's integration by parts on Wiener space delivers.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/5fbbbbcde9b03dc8dda9c0dec5566e54a99561796ef06db894482be4e71bec45.mp4"
+          >
+            <aside class="notes" data-markdown>The trade: an analytic gradient in y (requires knowing p) is exchanged for a stochastic integral plus a conditional expectation (just requires simulating the SDE). Bismut's original insight, adapted from heat kernels on Riemannian manifolds to score functions of Ito SDEs.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/c104a1b7d679f1a87f52e3cc6b610becb9930034463eb3590441c826fdd4dd3b.mp4"
+          >
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/bb6d2a8719eb89b50de47b8343924078d6996254315b6d98a707284d52216619.mp4"
+          >
+            <aside class="notes" data-markdown>Two foundational definitions. Wiener space is the path space of Brownian motion: continuous functions starting at 0, equipped with the Wiener measure. Functionals on this space are our random variables.
+
+Cameron-Martin H is the subspace of admissible perturbations: shifts by an element of H produce an equivalent law; shifts by anything outside H produce a mutually singular law. H is the tangent space at the Wiener measure --- the same idea returns in infinite-dim dress in Part V.
+
+Intuition for quasi-invariant: the two measures change in numerical value but agree on what's impossible.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/2d1fa62771b8578670d55ae73d112b12ea4c83550ceb5d5c907aefada047d6e8.mp4"
+          >
+            <aside class="notes" data-markdown>Why a special tangent space at the Wiener measure? Because the obvious one is too big.
+
+Grey/blue curves: Brownian samples. Holder-continuous of exponent just under one-half, nowhere differentiable. Red curve: a Cameron--Martin perturbation --- absolutely continuous, with L^2 derivative. Smooth, deterministic.
+
+Cameron--Martin theorem: shifting a Brownian path by the red curve produces an equivalent law (Radon--Nikodym density exists). Shifting by anything outside CM produces a mutually singular law. So CM is the right tangent space.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/1ca0d8b015fe506b1f4bc239f1984e1d75da19bfef1893d1f1a5ff298e53f460.mp4"
+          >
+            <aside class="notes" data-markdown>Intuitively a derivative with respect to the underlying Brownian path. D_t F measures how F responds to a kick of W at time t.
+
+Gamma_F equals the Gram matrix of DF --- a Riemannian metric on Wiener space. Its invertibility (Hormander) is what makes the whole machinery non-degenerate.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/d27b247f0725209ea22775844fa2378a71b24e35b5c0a650a477f8b50f9848c9.mp4"
+          >
+            <aside class="notes" data-markdown>Concretely: kick the Brownian path with a small bump of size epsilon at time r. Watch how F responds. Divide by epsilon, take epsilon to zero. That's D_r F --- the directional derivative of F with respect to the Brownian noise at time r.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/865270dc85aded66651c8c8575133d62d7beed8c8404ba54317616f87c582ed0.mp4"
+          >
+            <aside class="notes" data-markdown>A concrete example to anchor the abstract definition. Stock price as geometric Brownian motion: the Brownian differential dB is the continuous flow of market information --- news, sentiment, micro-events. A burst of noise around time t is an extra dose of that information at that moment.
+
+The Malliavin derivative of S_T turns out to be sigma times S_T itself, for any t up to T. Reading: a shock at any past time moves the year-end price proportionally to the terminal price, scaled by volatility. The same magnitude of response for every t is a special feature of the multiplicative model; in richer SDEs you get richer time-profiles where early shocks compound.
+
+Why this matters: replace S_T with an option payoff and apply the chain rule. The option only responds to past shocks when it ends up in the money. This is the identity Fournie et al. used in 1999 to compute Greeks via Malliavin calculus --- the standard route in derivatives pricing.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/c8a81071f9ea0b659d44613a3b615348b83a17347b3b8ea53df9ca0d2548410f.mp4"
+          >
+            <aside class="notes" data-markdown>D has an adjoint, delta, defined by the integration-by-parts identity: E[<DF, u>] = E[F times delta(u)].
+
+Two faces. For adapted u, delta is just the Ito integral. For anticipating u --- exactly what Bismut's formula will need --- it's Malliavin's extension, the only well-defined integral in that regime.
+
+Tiny example to anchor the term: W_t is adapted (only the past); W_T is not (uses the endpoint).</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/6a6e2319a2bd9d1746041761beafe193be295d909206eec12d4f4dd7ebf4874d.mp4"
+          >
+            <aside class="notes" data-markdown>Y_t: the Jacobian of the stochastic flow. How a perturbation of the initial condition propagates to time t.
+
+State-independent sigma: Y has no Brownian term, is deterministic along each path. Keeps Paper I clean. State-dependent sigma makes Y a genuine diffusion --- the extra technical work of Paper II.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/97ba9863a2696be817d42c3dc28a918e2a9d8c90bc4d8f242578be6e8917699e.mp4"
+          >
+            <aside class="notes" data-markdown>Foundational identity: D_r X_t = Y_t Y_r^{-1} sigma(r, X_r) for r <= t. A perturbation at r enters through sigma, propagates to t by Y_t Y_r^{-1} --- the stochastic propagator, non-commutative analog of e^{(t-r)A}.
+
+Gamma in two equivalent forms: Gram matrix of {DX_T^{(i)}} as Hilbert vectors, or the explicit integral. Diagonal entries measure noise reaching each state direction; positive-definiteness is Hormander.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/49259613fb6f87dfccb6fc73bb87040870416a9287660c1e1fede9c39a1e03ff.mp4"
+          >
+            <aside class="notes" data-markdown>The master formula: the k-th score equals minus the conditional expectation of delta(u_k) given X_T = y. No Fokker--Planck, no transition density.
+
+u_k is the covering field --- the Brownian perturbation that shifts only the k-th coordinate of X_T. Built next.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/d482aa8a81ea851af3ccf532dfc1c822dbb23fddaa7f5a21a945302ba7994c8f.mp4"
+          >
+            <aside class="notes" data-markdown>Step one. Simulate one Brownian path through 2D anisotropic OU (eigenvalues 0.6 and 2.5). Pick coordinate k = 1 to perturb.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/a126acd1da3e35fba706e99877de0dfd9d97e9d95f0dd880792f3832e8179903.mp4"
+          >
+            <aside class="notes" data-markdown>Step two. Compute D_t X_T --- the Malliavin derivative as a function of t. Tells us how X_T responds to a Brownian kick at intermediate time t. For diagonal OU it's a diagonal matrix with exponential decays at rates lambda_1 and lambda_2.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/97cb142c3887b1c6f0bff5b305df3c7da4033d76e5e2a736068ba555a908b281.mp4"
+          >
+            <aside class="notes" data-markdown>Step three. Scale by gamma-inverse-kk. Gamma comes from the L^2 norm of D_t X_T --- 0.58 and 0.20 here. Inverting: 1.72 and 5.03. The second coordinate's slower mixing means a larger normalisation factor is needed for unit endpoint shift.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/f7a88738ec67f7c54af2173ef9122ece8a22ae6e10b6a65f327c3601bf11671d.mp4"
+          >
+            <aside class="notes" data-markdown>Step four. Assemble: u_k(t) = gamma-inverse-kk times D_t X_T column k. u_1 peaks at 1.72 at t = T; u_2 peaks at 5.03. Compact support shaped by the exponential decay.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/1de08127ad7004c4e0fafb73207ff1611954c6a9aba664e0279bed7ad3fe116b.mp4"
+          >
+            <aside class="notes" data-markdown>Step five. Verify. Conceptual point: u_k was DEFINED by the formula, not constructed to satisfy a covering property. But when you perturb W by u_1, the simulated X_T shifts by exactly (epsilon, 0); perturb by u_2, it shifts by (0, epsilon). The covering property falls out of the formula --- that's what makes the formula the RIGHT object.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/84b4f4b69114cc0dbf65499eaa10ab2e272c9043d7fb61804f817954d221a68d.mp4"
+          >
+            <aside class="notes" data-markdown>Two clarifications before the derivation.
+
+Index k on u_k refers to STATE space, not noise space. u_k is a noise-space path whose downstream effect is a unit shift in X_T's k-th coordinate.
+
+delta(u_k) is the Skorokhod integral --- not Riemann (would be deterministic), not Ito (requires adapted, and u_k contains gamma-inverse which anticipates). Malliavin's adjoint of D is the only well-defined option.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/5fa5e2ecf7a08ea39a5d0299e33f5a25b49b0434e96522d8ea247889f26cb4de.mp4"
+          >
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/4a0397fd883ae824492b67cb32b0dfbf60ec81424278c9d1c6c1effebc909a56.mp4"
+          >
+            <aside class="notes" data-markdown>Paper I: sigma deterministic. Y_t is the fundamental matrix of a deterministic linear ODE; the second variation Z_t is also deterministic and effectively trivial.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/0472aa157b2632e759cf9d6e5fe08f9519a998b24b51b0fb6e31b549dadfc802.mp4"
+          >
+            <aside class="notes" data-markdown>Closed form for gamma_{X_T}: a Gramian of the linearised flow conjugated by Y_T. Same algebraic object as the controllability Gramian in linear control. Invertibility says the noise reaches every direction.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/d9180151b0e1b402f8d0597c6f9c649f425f10449b70625be4ec3020fdf563be.mp4"
+          >
+            <aside class="notes" data-markdown>Closed form for the linear case. Identical to inverting the Gaussian Fokker--Planck via Tweedie --- but our derivation never uses the Gaussian assumption. The score is re-expressed as a conditional expectation of the INITIAL CONDITION, which is the form that generalises to nonlinear b and to infinite dim.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/941c1d5f5ccce4d7ce8a79c7b36ffd29b4de8c39f64a9011b7a072410723db06.mp4"
+          >
+            <aside class="notes" data-markdown>Now nonlinear drift, sigma still deterministic. Y depends on the path through partial-x b --- random along each trajectory. The second variation Z enters as the Hessian of the flow map.
+
+Key contrast: linear case gave a non-random u_k (Y, gamma both deterministic), so Skorokhod = Ito trivially. Now u_k contains gamma_{X_T} which depends on the full path up to T, so u_k anticipates the future. Need Skorokhod via Nualart's substitution.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/1645e5de63df4dc8e60f9d79333d42937984d4738795f8123f969f6467fffc59.mp4"
+          >
+            <aside class="notes" data-markdown>u_k contains Y_T and gamma-inverse --- both F_T-measurable, so u_k anticipates. Ito not defined; need Skorokhod.
+
+Nualart's trick: treat the F_T factors as a SYMBOLIC parameter x, compute the adapted Ito integral as a function of x, then substitute x equals (Y_T, gamma-inverse) at the end. Order matters. The correction (red box) is the price of the anticipation.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/87924035b50519da97a06d8bc262950e635e06895218e4e937fde6180d316966.mp4"
+          >
+            <aside class="notes" data-markdown>Closed form for nonlinear b, state-indep sigma. Same architecture as Paper II will have: a Bismut--Ito integral plus a single drift-time integral, with Y and Z co-simulated along X.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/feca1d3198ff41fee4d434bbf38ede510af9f90810a1ba97ff8957cb6b58910c.mp4"
+          >
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/8e6fdb06f89e86de7b5ad966c8e620bb2632744d31af2dbd27b071f3a0c54ab2.mp4"
+          >
+            <aside class="notes" data-markdown>State-dependent sigma: two things change. Y becomes a GL(m)-valued diffusion (Brownian term in its SDE). Z becomes a tensor-valued diffusion --- a stochastic Hessian.
+
+Nualart's substitution still applies, but corrections get richer: D_t F now depends on the full path through sigma(t, X_t), and partial-x u_k picks up extra partial-x sigma terms. Technical core of Paper II.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/2def604a0e177343b84a3a0abebe8fb960c2528b6645f628454c4dd0c6af2a1b.mp4"
+          >
+            <aside class="notes" data-markdown>Paper II main theorem. Even with state-dependent sigma, delta(u_k) has a closed-form expansion in X, Y, Z, sigma, partial-x sigma alone --- every Malliavin derivative eliminated.
+
+Same architecture as Paper I: a Bismut--Ito integral, plus a drift-time integral whose integrand factors as Y-inverse sigma against B - A + C. The three correction families are explicit polynomials in the simulation variables.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/0310b7b5129ef3ae94e651d67070f1b1aea7cec2ac8d3b02df43cdbb67c77ed4.mp4"
+          >
+            <aside class="notes" data-markdown>The expansion looks complicated, but every term is simulatable. One coupled forward SDE gives X, Y, Z. Plug in. Regress with a neural net.
+
+What this is: a computable, pathwise score formula for the fully nonlinear state-dependent SDE --- the first of its kind. A building block for any application that needs the score of a nonlinear stochastic system: generative modelling, filtering, control, sensitivity, rare events, statistical mechanics. High-dim scaling and variance control are future work.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/4ef7f15ce6c27b3c301c1233ddf720ea59c0f448f5c0444d6d736236d91592bb.mp4"
+          >
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/0ea98f30fe1bc70a512772d3e49df523e36dfc1f04d765397833168b81be3e12.mp4"
+          >
+            <aside class="notes" data-markdown>Now infinite dimensions. State is a function; dynamics is an SPDE. A unbounded (typically a Laplacian); Q trace-class. S(t) is a strongly continuous semigroup, Q-to-the-half is Hilbert--Schmidt.
+
+Standing example: stochastic heat on a bounded domain. The setting where pointwise densities don't exist.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/b401e6f6c393e0be033069460f1a3c12eaa68d346c15c0be15c4de641ee43544.mp4"
+          >
+            <aside class="notes" data-markdown>Weil's theorem: no non-zero translation-invariant Borel measure on an infinite-dim separable Banach space. So no Lebesgue measure on H, hence no Radon--Nikodym density p_t(u), hence nabla log p_t has no meaning.
+
+Define the score intrinsically --- through integration by parts, not through a density.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/5e0472bb7c67a9549e6623a33bc92a6b037af670d4f5cddc8a64f66157889ccf.mp4"
+          >
+            <aside class="notes" data-markdown>Three moves in one slide.
+
+First: define the score DIRECTIONALLY --- rate of change of mu_t along a chosen h, not pointwise. Second: Fomin's beta_h --- the abstract characterisation via integration by parts, no Lebesgue needed. Third: existence. beta_h exists iff mu is quasi-invariant along h. Gaussian measures are essentially the only widely-used class with a rich computable family of admissible directions --- namely Cameron--Martin. That's why the noise is Gaussian: it's what gives a usable directional-derivative theory in infinite dim.
+
+Intuition for the IBP identity: it's the answer to the question, how do I do calculus when I can only do integrals? It lets you swap derivatives between functions inside an integral.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/792dab8b9baff603f74e2953ab2f4617be2b152fa99c78bdbcca8d6e1659e3f2.mp4"
+          >
+            <aside class="notes" data-markdown>Operator analogue of the Malliavin matrix. For the linear SPDE, Y_t = S(t). Gamma_t becomes a positive self-adjoint trace-class operator on H.
+
+Same expression as the matrix Gramian of Part III, with sigma replaced by Q-to-the-half and Y_T Y_r^{-1} by S(t - r). The same pattern, in the right habitat.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/db54e22633c445bb7646fc1777ce837f3e3fafb827af9f1dd7cf12679cf2c579.mp4"
+          >
+            <aside class="notes" data-markdown>Main theorem. Directional score is a generalised Mahalanobis distance: centred residual u minus S(t) u_0, paired against gamma-inverse h, negated.
+
+Initially defined only for h in the range of gamma_t, where gamma-inverse h makes sense; extends to all of Cameron--Martin space by density.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/f76622f9ff07413e20b410302a5b9e2e758ac31967043e36aa87a62025ea0290.mp4"
+          >
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/6c2744108c983d1a835e1806a18ddf292acf5b249d2349b25da83ef78d4dd6e9.mp4"
+          >
+            <aside class="notes" data-markdown>Part IV numerics. Drift is the rational form (X-a)/(1+(X-a)^2) scaled by k beta(t); diffusion sigma times sqrt beta(t). Stationary distribution is generalised Cauchy --- heavy-tailed, no Gaussian closed-form score available. Our pathwise formula gives the training target without any PDE solve.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/13693589fd560d17aefe9cbf0f80b6f433b3fb6ad193c53b573f042ffa030bd8.mp4"
+          >
+            <aside class="notes" data-markdown>Part V numerics. Validate Theorem 3.4 against finite-difference of log-likelihood along a Cameron--Martin direction. Left: 1D, four SPDE classes (heat, OU, scaled diffusion, fractional Laplacian). Right: 2D pointwise error across stochastic heat, OU, biharmonic, Swift--Hohenberg. Errors at machine precision.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/59a8edbf2bad75f7a2bce2f00030f2144c3d62a6cc5934fb88fbec4381a5124d.mp4"
+          >
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/f442a3191559a31c26d64688549dc3b45aa6880dd58126b8c996e2222b5b340f.mp4"
+          >
+            <aside class="notes" data-markdown>First open direction --- in progress. Paper II gives nonlinear SDEs in finite dim; Paper III gives linear SPDEs in infinite dim. Missing diagonal is nonlinear SPDEs. Variational Rockner--Shang--Zhang framework should give the right Banach setting; analog of Y, Z, the Cameron--Martin geometry --- all need to be reconstructed there.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/e3f887d3ad02f75cd4e23bb146ba2f20aaa6c81fc2472c431662072d36776156.mp4"
+          >
+            <aside class="notes" data-markdown>Most geometric direction. Replace R^m with (M, g). Three structural changes: Y_t is the horizontal lift of the flow to the frame bundle; Z_t acquires a Riemann curvature term; the score becomes a 1-form on M, and reverse-time SDE picks up Ricci.
+
+Building blocks exist (Bismut 1984; Driver; Hsu; Thalmaier). What's open: the score formula at the generality of Paper II on a curved manifold. Natural for manifold-valued generative models, Lie-group sampling, geodesic MCMC.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/d13f51a7f0669d3b9ea0af66916aeb6be29b0b03afc26de66dd6ecc2ae7a8a75.mp4"
+          >
+            <aside class="notes" data-markdown>Third direction --- making Paper II computable in high dim. The bottleneck: Y is m-by-m, Z is m-by-m-by-m. At image scale you cannot store Z. So the central move is to never form Y or Z explicitly; only their actions on the covering field.
+
+Three concrete tools. JVP and VJP through the SDE integrator give Y-times-v at O(m) cost using forward or reverse-mode AD. Pearlmutter's trick gives Hessian-vector products for Z at the same cost. Hutchinson estimators handle the trace and divergence terms with a few Gaussian probes. Stochastic adjoints (Li-Wong-Chen-Duvenaud) handle the memory cost in T by replaying the forward path during backward.
+
+Realistic ceiling for direct training: m around 10^5 on a single GPU. Beyond that, structural assumptions are needed: sparsity (physical systems with local interactions), low-rank Z (some neural drifts), or amortisation via a learnt score network where Bismut only provides training targets at sampled points.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/7f6d59ec61c4ac862c57a632b0522451c48b24193b8ef720d701c64e75276eaf.mp4"
+          >
+            <aside class="notes" data-markdown>Last direction. The score is the same object across very different fields, but in each, current methods rely on a Gaussian approximation. Our pathwise nonlinear score lifts that restriction.
+
+Generative modelling: heavy-tailed and structured forwards instead of Gaussian. Filtering: replace EnKF's Gaussian update with exact Bayes. Control: path-integral, Schrodinger bridges, soft RL --- all naturally use the score. Rare events: optimal Girsanov tilt IS the score. Sensitivity: likelihood-ratio Greeks beyond linear regimes. Statistical mechanics: entropy production, fluctuation theorems, heat currents, all in non-Gaussian settings.
+
+Each is an active research community where exact non-Gaussian scores are a missing piece, not a curiosity.</aside>
+        </section>
+        <section
+          data-background-size='contain'
+          data-background-color="#fbf8f1"
+          data-background-video="slides_assets/263ad30108a7bf2b5a8bd93978cfeec9474d547293d6127b08f125d2355d37d0.mp4"
+          >
+            <aside class="notes" data-markdown>Thanks for listening. Open the floor.</aside>
+        </section>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@6.0.1/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@6.0.1/dist/plugin/notes.js"></script>
+
+    <!-- To include plugins, see: https://revealjs.com/plugins/ -->
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@6.0.1/dist/plugin/markdown.js"></script>
+
+    <!-- <script src="index.js"></script> -->
+    <script>
+      Reveal.initialize({
+        /// The list of RevealJS plugins.
+        plugins: [ RevealMarkdown, RevealNotes ],
+        // The "normal" size of the presentation, aspect ratio will
+        // be preserved when the presentation is scaled to fit different
+        // resolutions. Can be specified using percentage units.
+        width: '100%',
+        height: '100%',
+        // Factor of the display size that should remain empty around
+        // the content
+        margin: 0.04,
+        // Bounds for smallest/largest possible scale to apply to content
+        minScale: 0.2,
+        maxScale: 2.0,
+        // Display presentation control arrows
+        controls: false,
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: true,
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'bottom-right',
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+        // Display a presentation progress bar
+        progress: false,
+        // Display the page number of the current slide
+        // - true:    Show slide number
+        // - false:   Hide slide number
+        //
+        // Can optionally be set as a string that specifies the number formatting:
+        // - "h.v":   Horizontal . vertical slide number (default)
+        // - "h/v":   Horizontal / vertical slide number
+        // - "c":   Flattened slide number
+        // - "c/t":   Flattened slide number / total slides
+        //
+        // Alternatively, you can provide a function that returns the slide
+        // number for the current slide. The function should take in a slide
+        // object and return an array with one string [slideNumber] or
+        // three strings [n1,delimiter,n2]. See #formatSlideNumber().
+        slideNumber: false,
+        // Can be used to limit the contexts in which the slide number appears
+        // - "all":      Always show the slide number
+        // - "print":    Only when printing to PDF
+        // - "speaker":  Only in the speaker view
+        showSlideNumber: 'all',
+        // Use 1 based indexing for # links to match slide number (default is zero
+        // based)
+        hashOneBasedIndex: false,
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: false,
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: false,
+        // Enable support for jump-to-slide navigation shortcuts
+        jumpToSlide: true,
+        // Push each slide change to the browser history.  Implies `hash: true`
+        history: false,
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+        // Optional function that blocks keyboard events when retuning false
+        //
+        // If you set this to 'focused', we will only capture keyboard events
+        // for embedded decks when they are in focus
+        keyboardCondition: null,
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+        // Enable the slide overview mode
+        overview: true,
+        // Vertical centering of slides
+        center: true,
+        // Enables touch navigation on devices with touch input
+        touch: true,
+        // Loop the presentation
+        loop: false,
+        // Change the presentation direction to be RTL
+        rtl: false,
+        // Changes the behavior of our navigation directions.
+        //
+        // "default"
+        // Left/right arrow keys step between horizontal slides, up/down
+        // arrow keys step between vertical slides. Space key steps through
+        // all slides (both horizontal and vertical).
+        //
+        // "linear"
+        // Removes the up/down arrows. Left/right arrows step through all
+        // slides (both horizontal and vertical).
+        //
+        // "grid"
+        // When this is enabled, stepping left/right from a vertical stack
+        // to an adjacent vertical stack will land you at the same vertical
+        // index.
+        //
+        // Consider a deck with six slides ordered in two vertical stacks:
+        // 1.1    2.1
+        // 1.2    2.2
+        // 1.3    2.3
+        //
+        // If you're on slide 1.3 and navigate right, you will normally move
+        // from 1.3 -> 2.1. If "grid" is used, the same navigation takes you
+        // from 1.3 -> 2.3.
+        navigationMode: 'default',
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+        // Turns fragments on and off globally
+        fragments: true,
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: true,
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+        // Flags if we should show a help overlay when the question-mark
+        // key is pressed
+        help: true,
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+        // Global override for autolaying embedded media (video/audio/iframe)
+        // - null:   Media will only autoplay if data-autoplay is present
+        // - true:   All media will autoplay, regardless of individual setting
+        // - false:  No media will autoplay, regardless of individual setting
+        autoPlayMedia: null,
+        // Global override for preloading lazy-loaded iframes
+        // - null:   Iframes with data-src AND data-preload will be loaded when within
+        //           the viewDistance, iframes with only data-src will be loaded when visible
+        // - true:   All iframes with data-src will be loaded when within the viewDistance
+        // - false:  All iframes with data-src will be loaded only when visible
+        preloadIframes: null,
+        // Can be used to globally disable auto-animation
+        autoAnimate: true,
+        // Optionally provide a custom element matcher that will be
+        // used to dictate which elements we can animate between.
+        autoAnimateMatcher: null,
+        // Default settings for our auto-animate transitions, can be
+        // overridden per-slide or per-element via data arguments
+        autoAnimateEasing: 'ease',
+        autoAnimateDuration: 1.0,
+        autoAnimateUnmatched: true,
+        // CSS properties that can be auto-animated. Position & scale
+        // is matched separately so there's no need to include styles
+        // like top/right/bottom/left, width/height or margin.
+        autoAnimateStyles: ['opacity', 'color', 'background-color', 'padding', 'font-size', 'line-height', 'letter-spacing', 'border-width', 'border-color', 'border-radius', 'outline', 'outline-offset'],
+        // Controls automatic progression to the next slide
+        // - 0:      Auto-sliding only happens if the data-autoslide HTML attribute
+        //           is present on the current slide or fragment
+        // - 1+:     All slides will progress automatically at the given interval
+        // - false:  No auto-sliding, even if data-autoslide is present
+        autoSlide: 0,
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+        // Use this method for navigation when auto-sliding (defaults to navigateNext)
+        autoSlideMethod: null,
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+        // Opens links in an iframe preview overlay
+        // Add `data-preview-link` and `data-preview-link="false"` to customize each link
+        // individually
+        previewLinks: false,
+        // Exposes the reveal.js API through window.postMessage
+        postMessage: true,
+        // Dispatches all reveal.js events to the parent window through postMessage
+        postMessageEvents: false,
+        // Focuses body when page changes visibility to ensure keyboard shortcuts work
+        focusBodyOnPageVisibilityChange: true,
+        // Transition style
+        transition: 'none', // none/fade/slide/convex/concave/zoom
+        // Transition speed
+        transitionSpeed: 'default', // default/fast/slow
+        // Transition style for full page slide backgrounds
+        backgroundTransition: 'none', // none/fade/slide/convex/concave/zoom
+        // The maximum number of pages a single slide can expand onto when printing
+        // to PDF, unlimited by default
+        pdfMaxPagesPerSlide: Number.POSITIVE_INFINITY,
+        // Prints each fragment on a separate slide
+        pdfSeparateFragments: true,
+        // Offset used to reduce the height of content within exported PDF pages.
+        // This exists to account for environment differences based on how you
+        // print to PDF. CLI printing options, like phantomjs and wkpdf, can end
+        // on precisely the total height of the document whereas in-browser
+        // printing has to end one pixel before.
+        pdfPageHeightOffset: -1,
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+        // The display mode that will be used to show slides
+        display: 'block',
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000
+      });
+      // Override SPACE to play / pause the video
+      Reveal.addKeyBinding(
+        {
+          keyCode: 32,
+          key: 'SPACE',
+          description: 'Play / pause video'
+        },
+        () => {
+          var currentVideos = Reveal.getCurrentSlide().slideBackgroundContentElement.getElementsByTagName("video");
+          if (currentVideos.length > 0) {
+            if (currentVideos[0].paused == true) currentVideos[0].play();
+            else currentVideos[0].pause();
+          } else {
+            Reveal.next();
+          }
+        }
+      );
+    </script>
+  </body>
+</html>
